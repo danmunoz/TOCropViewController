@@ -327,8 +327,9 @@ static const CGFloat kTOCropViewControllerToolbarHeight = 44.0f;
         if (self.toolbarPosition == TOCropViewControllerToolbarPositionBottom) {
             frame.origin.y = CGRectGetHeight(self.view.bounds) - (frame.size.height + insets.bottom);
         } else {
-            // When toolbar is at the top, always respect safe area insets
-            frame.origin.y = self.view.safeAreaInsets.top;
+            // When toolbar is at the top, use a fixed top padding, hardcoded for SwiftUI usage.
+            CGFloat topPadding = 30.0f;
+            frame.origin.y = topPadding;
 
             if (self.titleLabel.text.length) {
                 // Work out the size of the title label based on the crop view size
