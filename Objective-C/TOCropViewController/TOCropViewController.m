@@ -327,17 +327,18 @@ static const CGFloat kTOCropViewControllerToolbarHeight = 44.0f;
         if (self.toolbarPosition == TOCropViewControllerToolbarPositionBottom) {
             frame.origin.y = CGRectGetHeight(self.view.bounds) - (frame.size.height + insets.bottom);
         } else {
+            // When toolbar is at the top, always respect safe area insets
+            frame.origin.y = self.view.safeAreaInsets.top;
+
             if (self.titleLabel.text.length) {
                 // Work out the size of the title label based on the crop view size
                 CGRect frame = self.titleLabel.frame;
                 frame.size = [self.titleLabel sizeThatFits:self.cropView.frame.size];
                 self.titleLabel.frame = frame;
 
-                // Set out the appropriate inset for that
-                insets.top = CGRectGetMaxY(self.titleLabel.frame);
-                insets.top += kTOCropViewControllerTitleTopPadding;
+                // Position toolbar below the title label
+                frame.origin.y = CGRectGetMaxY(self.titleLabel.frame) + kTOCropViewControllerTitleTopPadding;
             }
-            frame.origin.y = insets.top;
         }
     }
 
@@ -471,6 +472,10 @@ static const CGFloat kTOCropViewControllerToolbarHeight = 44.0f;
 
 - (void)viewSafeAreaInsetsDidChange {
     [super viewSafeAreaInsetsDidChange];
+
+    // Recalculate toolbar frame to respect updated safe area insets
+    self.toolbar.frame = [self frameForToolbarWithVerticalLayout:self.verticalLayout];
+
     [self adjustCropViewInsets];
     [self adjustToolbarInsets];
 }
@@ -1225,8 +1230,9 @@ static const CGFloat kTOCropViewControllerToolbarHeight = 44.0f;
     statusBarHeight = self.view.safeAreaInsets.top;
 
     // We do need to include the status bar height on devices
-    // that have a physical hardware inset, like an iPhone X notch
-    BOOL hardwareRelatedInset = self.view.safeAreaInsets.bottom > FLT_EPSILON && UIDevice.currentDevice.userInterfaceIdiom == UIUserInterfaceIdiomPhone;
+    // that have a physical hardware inset, like an iPhone X notch or Dynamic Island
+    // Check both top and bottom safe area insets to detect hardware-related insets
+    BOOL hardwareRelatedInset = (self.view.safeAreaInsets.bottom > FLT_EPSILON || self.view.safeAreaInsets.top > FLT_EPSILON) && UIDevice.currentDevice.userInterfaceIdiom == UIUserInterfaceIdiomPhone;
 
 // Always have insetting on Mac Catalyst
 #if TARGET_OS_MACCATALYST
